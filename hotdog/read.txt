@@ -1,0 +1,3 @@
+auction:yes
+timer:0
+number:65
