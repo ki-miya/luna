@@ -1,5 +1,6 @@
-import discord										#Luna v0.6.2
-import asyncio										#12/28/2017
+import discord										#Luna v0.6
+import asyncio										#12/27/2017
+import os
 from discord.ext.commands import Bot
 from discord.ext import commands
 from datetime import datetime
@@ -15,17 +16,42 @@ async def on_ready():
     print("ID: {}".format(client.user.id))
     await client.change_presence(game=discord.Game(name='+help'))
 
-@asyncio.coroutine
-def gofast():
+@client.event
+async def on_server_join(server):
+	print("Luna has joined the server [%s]!" % (server.name))
+	folder = '/Users/kawaiikiana/Documents/Luna/Servers/%s' % (server.id)
+	print(folder)
+	if not os.path.exists(folder):
+		os.makedirs(folder)
+		if os.path.exists(folder):
+			file1 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (server.id)
+			file2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/read.txt' % (server.id)
+			file3 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (server.id)
+			file4 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (server.id)
+			hotdog = open(file1, 'w+')
+			hotdog.close()
+			chilidog = open(file2, 'w+')
+			chilidog.close()
+			corndog = open(file3, 'w+')
+			corndog.close()
+			pizza = open(file4, 'w+')
+			pizza.close()
 
-	path = '/Users/kawaiikiana/Documents/Luna/hotdog/timer.txt'
+@asyncio.coroutine
+async def gofast(server, channel):
+
+	print('here the server i guess')
+	print(server)
+
+	path = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (server)
 	cake = open(path, 'r')
 	check = cake.read()
 	check = check.replace('timer: ','')
 	check = int(check)
+	cake.close()
+	
 	while check > 0:
-
-		cake.close()
+		
 		cake = open(path, 'r')
 		check = cake.read()
 		check = check.replace('timer: ','')
@@ -36,14 +62,15 @@ def gofast():
 		cake2 = open(path, 'w')
 		cake2.writelines(newline)
 		cake2.close()
-		yield from asyncio.sleep(1)
+		await asyncio.sleep(1)
 
 	if check == 0:
 		readme = open('/Users/kawaiikiana/Documents/Luna/hotdog/readme.txt', 'w')
 		newline = '```diff*-Timer up-*```'
 		read = readme.write(newline)
+		readme.close()
 
-		info = '/Users/kawaiikiana/Documents/Luna/hotdog/info.txt'
+		info = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (server)
 		read = open(info, 'r')
 		read2 = read.readlines()
 		chili = read2[0]
@@ -75,8 +102,8 @@ def gofast():
 		hbid = str(hbid)
 		sbid = sbid + ' Kamas'
 		hbid = hbid + ' Kamas'
-		server = client.get_server('257665487066890241')
-		cake = server.get_member_named('%s' % (seller))
+		aserver = client.get_server(server)
+		cake = aserver.get_member_named('%s' % (seller))
 
 		em = discord.Embed(colour=color)
 		em.set_author(name='%s' % (item), icon_url='https://discordapp.com/assets/d59493c473541bf5d036c56e996b152b.svg')
@@ -86,16 +113,16 @@ def gofast():
 		em.add_field(name='Buyer', value='%s' % (buyer), inline=False)
 		em.add_field(name='Selling Price', value='%s' % (hbid), inline=False)
 		em.set_footer(text="Auctioneer Luna | %s" % (date))
-		yield from client.send_message(discord.Object(id='382026630018629632'), embed=em)
-		yield from client.send_message(discord.Object(id='383754383550316545'), embed=em)
-		yield from client.send_message(cake, embed=em)
+		#await client.send_message(discord.Object(id='383754383550316545'), embed=em) GET CHANNEL ID OF 'AUCTION-RESULTSS'
+		await client.send_message(discord.Object(id=channel), embed=em)
+		await client.send_message(cake, embed=em)
 
-		dbase = '/Users/kawaiikiana/Documents/Luna/hotdog/database.txt'
+		dbase = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (server)
 		hotdog = open(dbase, 'r')
 		dlines = hotdog.readlines()
 		dcheck = dlines[0]
 
-		info = '/Users/kawaiikiana/Documents/Luna/hotdog/info.txt'
+		info = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (server)
 		cheeseit = open(info, 'r')
 		ilines = cheeseit.readlines()
 		icheck = ilines[0]
@@ -107,18 +134,20 @@ def gofast():
 				if not line.startswith(dcheck):
 					chilidog.write(line)
 
-		loopG = asyncio.get_event_loop()
-		loopG.run_until_complete(respond())
-		loopG.close()
+		#loopG = asyncio.get_event_loop()
+		#loopG.run_until_complete(respond())
+		#loopG.close()
+		await respond(server=server, channel=channel)
 
 @client.event
-async def respond():
+async def respond(server, channel):
 	readme = open('/Users/kawaiikiana/Documents/Luna/hotdog/readme.txt', 'r')
 	pasta = readme.readlines()
 	response = pasta[0]
 	response = response.replace('*','\n')
-	gchannel = '382026630018629632'
-	await client.send_message(discord.Object(id=gchannel), str(response))
+	print(server)
+	print(channel)
+	await client.send_message(discord.Object(id=channel), str(response))
 
 @client.event  
 async def on_message(message):
@@ -129,6 +158,17 @@ async def on_message(message):
 		name = name.replace('<', '')
 		name = name.replace('>', '')
 		print(name)
+
+	'''if message.content.startswith('cake'):
+		server = message.server
+		cake = server.get_member_named('Bari#4122')
+		response = '-slidin into yo dm- :octopus: :wink: <:cawwot:378350427726544896>'
+		await client.send_message(cake, str(response))'''
+
+	'''if message.content.startswith('+pm'):
+		response = 'Sliding into yo DM like <:miya:373879762138955777>'
+		print(message.author)
+		await client.send_message(message.author, str(response))'''
 
 	if message.content.startswith('+hello'):
 		name = str(message.author.display_name)
@@ -213,12 +253,12 @@ async def on_message(message):
 		if 'yes' in check:
 			said = str(message.content)
 			said = said.replace('+add:','')
-			item, price = said.split('/')
+			item, price = said.split(':')
 			price = price.replace(',','')
 			price = int(price)
 			price = '{:,}'.format(price)
 			newline = '[' + number + ']' + ':' + '[' + charname + ']' + ':' + '[' + item + ']' + ':' + price + ' Kamas\n'
-			path2 = '/Users/kawaiikiana/Documents/Luna/hotdog/database.txt'
+			path2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id)
 			hotdog = open(path2, 'r')
 			lines2 = hotdog.readlines()
 			temp2 = open(path2, 'w')
@@ -239,7 +279,7 @@ async def on_message(message):
 		lines = temp.readlines()
 		check = lines[0]
 
-		path2 = '/Users/kawaiikiana/Documents/Luna/hotdog/database.txt'
+		path2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id)
 		hotdog = open(path2, 'r')
 		lines2 = hotdog.readlines()
 		if 'yes' in check:
@@ -263,6 +303,14 @@ async def on_message(message):
 				allowed = 1
 				print(allowed)'''
 
+	'''if message.content.startswith('+maked'):
+		folder = '/Users/kawaiikiana/Documents/Luna/Servers/pop/'
+		print(folder)
+		if not os.path.exists(folder):
+			os.makedirs(folder)
+			response = 'File created for the server.'
+			await client.send_message(message.channel, str(response))'''
+
 	if message.content.startswith('+remove '):
 
 		name = '{0.author.mention}/'.format(message)
@@ -280,7 +328,7 @@ async def on_message(message):
 		lines = temp.readlines()
 		check = lines[0]
 
-		path2 = '/Users/kawaiikiana/Documents/Luna/hotdog/database.txt'
+		path2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id)
 		hotdog = open(path2, 'r')
 		lines2 = hotdog.readlines()
 		allowed = 0
@@ -326,7 +374,7 @@ async def on_message(message):
 		response += '	- shows all items listed on the market.\n\n'
 		response += '+view\n'
 		response += '	- shows only your listings on the market.\n\n'		
-		response += '+add/[itemName]/[Price]\n'
+		response += '+add:[itemName]:[Price]\n'
 		response += '	- adds an item to the market, remove the brackets [ ]\n\n'
 		response += '+remove [id]\n'
 		response += '	- removes an item from the market.\n'
@@ -344,20 +392,43 @@ async def on_message(message):
 		response +=	'```'
 		response += '```diff\n'
 		response += '=======[ Misc. Commands ]=======\n\n'
-		response += 'These commands don\'t really serve a purpose.'
 		response += '+hotdog\n'
 		response += '+ping\n'
 		response += '+am\n'
 		response += '+hello\n'
 		response += '```\n'
-		response += '+info for more information.'
+		response += '```diff\n'
+		response += '- Notice!!!: Luna has been updated so that her auction list is server-based. The database file is created upon server creation, so if you added Luna prior to 2018, you will need to use the +createfiles command to ensure she works properly.\n```'
+		response += '```+info for more information.```'
 		await client.send_message(message.channel, str(response))
 
+	if message.content.startswith('+createfiles'):
+		print("Files created for the server [%s]!" % (message.server.name))
+		folder = '/Users/kawaiikiana/Documents/Luna/Servers/%s' % (message.server.id)
+		print(folder)
+		if not os.path.exists(folder):
+			os.makedirs(folder)
+			if os.path.exists(folder):
+				file1 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id)
+				file2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/read.txt' % (message.server.id)
+				file3 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (message.server.id)
+				file4 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (message.server.id)
+				hotdog = open(file1, 'w+')
+				hotdog.close()
+				chilidog = open(file2, 'w+')
+				chilidog.close()
+				corndog = open(file3, 'w+')
+				corndog.close()
+				pizza = open(file4, 'w+')
+				pizza.close()
+
+
 	if message.content.startswith('+info'):
-		response = "Hello! I'm Luna v0.7, a bot created by Miya#0270.\n"
+		response = "Hello! I'm Luna v0.7, a bot created by Miya#0270. <:luna:395750748308373505>\n"
 		response += "My bot prefix is '+' "
 		response += "To gain access to mod commands, you must either be in the mod list or have a role named `Luna Mod`. "
-		response += "The market database is global at the moment, so all listed items will be viewable from every server I'm on. "
+		response += "~~The market database is global at the moment, so all listed items will be viewable from every server I'm on.~~ "
+		response += "Everything is now server-based!! :tada: "
 		response += "I'm still in development, but all auction commands are good and working!"
 		await client.send_message(message.channel, str(response))
 
@@ -379,7 +450,7 @@ async def on_message(message):
 	if message.content.startswith('+search '):
 		term = message.content.replace('+search ','')
 		term = str(term)
-		temp = open('/Users/kawaiikiana/Documents/Luna/hotdog/database.txt', 'r')
+		temp = open('/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id), 'r')
 		result = 'no'
 		templines = temp.readlines()
 		response = '```\n'
@@ -399,7 +470,7 @@ async def on_message(message):
 
 	if message.content.startswith('+view'):
 		user = str(message.author)
-		view = open('/Users/kawaiikiana/Documents/Luna/hotdog/database.txt', 'r')
+		view = open('/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id), 'r')
 		result = 'no'
 		lines = view.readlines()
 		response = '```\n'
@@ -427,7 +498,7 @@ async def on_message(message):
 		lines = temp.readlines()
 		check = lines[0]
 
-		path2 = '/Users/kawaiikiana/Documents/Luna/hotdog/database.txt'
+		path2 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/database.txt' % (message.server.id)
 		hotdog = open(path2, 'r')
 		lines3 = hotdog.read()
 		hotdog.close()
@@ -453,17 +524,19 @@ async def on_message(message):
 				auction = lines2[0]
 				number, user, item, price = auction.split(':')
 				price = price.replace('\n','')
-				path3 = '/Users/kawaiikiana/Documents/Luna/hotdog/info.txt'
+				path3 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (message.server.id)
 				cheese = open(path3, 'w')
 				newlines = auction
 				newlines += 'hbid: %s\n' % (price)
 				newlines += 'name: none\n'
 				cheese.write(newlines)
+				cheese.close()
 
-				path4 = '/Users/kawaiikiana/Documents/Luna/hotdog/timer.txt'
+				path4 = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (message.server.id)
 				pickle = open(path4, 'w')
 				newlines = 'timer: 15'
 				pickle.write(newlines)
+				pickle.close()
 
 				response = '```\n'
 				response += 'Auction %s\n\n' % (number)
@@ -478,12 +551,15 @@ async def on_message(message):
 			await client.send_message(message.channel, str(response))
 		if allowed == 1:
 			if not lines3 == '':
+				'''channelid = str(message.channel.id)
+				serverid = str(message.server.id)
 				loopF = asyncio.get_event_loop()
 				loopF.run_until_complete(gofast())
-				loopF.close()
+				loopF.close()'''
+				await gofast(server=str(message.server.id), channel=str(message.channel.id))
 
 	if message.content.startswith('+bid'):
-		path = '/Users/kawaiikiana/Documents/Luna/hotdog/timer.txt'
+		path = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (message.server.id)
 		cake = open(path, 'r')
 		check = cake.read()
 		check = check.replace('timer: ','')
@@ -492,7 +568,7 @@ async def on_message(message):
 
 			name = str(message.author)
 
-			path = '/Users/kawaiikiana/Documents/Luna/hotdog/info.txt'
+			path = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (message.server.id)
 			temp = open(path, 'r')
 			lines = temp.readlines()
 
@@ -575,7 +651,7 @@ async def on_message(message):
 						if line.startswith('name:'):
 							temp.write(newname)
 
-					xelor = '/Users/kawaiikiana/Documents/Luna/hotdog/timer.txt'
+					xelor = '/Users/kawaiikiana/Documents/Luna/Servers/%s/timer.txt' % (message.server.id)
 					relish = open(xelor, 'w')
 					newlines = 'timer: 15'
 					relish.write(newlines)
@@ -584,7 +660,7 @@ async def on_message(message):
 					await client.send_message(message.channel, str(response))
 
 		if check == 0:
-			path = '/Users/kawaiikiana/Documents/Luna/hotdog/info.txt'
+			path = '/Users/kawaiikiana/Documents/Luna/Servers/%s/info.txt' % (message.server.id)
 			temp = open(path, 'r')
 			lines = temp.readlines()
 			line = lines[0]
